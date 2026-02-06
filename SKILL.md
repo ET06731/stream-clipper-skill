@@ -1,13 +1,13 @@
 ---
 name: stream-clipper
 description: >
-  直播切片智能剪辑工具。支持两种工作模式：1)直播录播：实时录制直播间，
-  每30分钟自动分段防止硬盘溢出，同时录制弹幕；2)录播切片：下载直播回放
-  （支持B站/YouTube等），获取弹幕和字幕，基于弹幕密度和字幕语义分析进行
-  智能切片，支持主播风格模板，自动生成符合主播特色的切片标题和简介，
-  一键上传到视频平台。
+  直播切片智能剪辑工具。核心原则：切片前必须提取字幕！支持两种工作模式：
+  1)直播录播：实时录制直播间，每30分钟自动分段防止硬盘溢出，同时录制弹幕；
+  2)录播切片：下载直播回放（支持B站/YouTube等），必须提取字幕+弹幕，基于
+  字幕内容和弹幕密度进行智能切片，支持主播风格模板，自动生成基于实际对话
+  的切片标题（制造悬念、引用金句）和简介，一键上传到视频平台。
   使用场景：直播录制、直播切片制作、VTuber剪辑、精彩片段提取、批量切片上传。
-  关键词：直播录制、自动分段、弹幕分析、VTuber、智能剪辑、自动上传
+  关键词：直播切片、字幕提取、弹幕分析、VTuber、智能剪辑、自动上传
 allowed-tools:
   - Read
   - Write
@@ -208,9 +208,11 @@ recordings/
 
 ---
 
-### 阶段 2: 下载直播回放
+### 阶段 2: 下载与字幕提取 ⭐ 关键步骤
 
-**目标**: 下载视频、弹幕、字幕
+**目标**: 下载视频、弹幕，并**必须提取字幕**
+
+**⚠️ 重要前提**: 切片前必须完成字幕提取！没有字幕无法生成基于内容的标题。
 
 1. **获取直播/录播 URL**
    - B站: `https://www.bilibili.com/video/BVxxxxx` 或 `https://live.bilibili.com/xxxxx`
@@ -224,15 +226,37 @@ recordings/
 3. **下载内容**
    - 视频文件 (MP4, 最高1080p)
    - 弹幕文件 (XML/JSON 格式)
-   - 字幕文件 (VTT/SRT 格式, 自动翻译)
+   - 字幕文件 (如果平台提供)
 
-**输出**:
+4. **提取字幕（必须）**
+   ```bash
+   # 方式1: 使用 Whisper 提取完整字幕
+   python3 scripts/extract_subtitles.py <video.mp4> --output <video.srt>
+   
+   # 方式2: 仅提取关键片段（快速）
+   python3 scripts/extract_subtitles.py <video.mp4> --segments-only --output segments/
+   ```
+   
+   **字幕提取原理**:
+   - 使用 OpenAI Whisper 模型
+   - 支持多语言识别
+   - 生成 SRT/VTT 格式
+   - 可选：仅提取高密度时段片段（节省算力）
+
+**输出**（三个必备文件）:
 ```
 ./downloads/
-├── <video_id>.mp4          # 视频
-├── <video_id>.danmaku.xml  # 弹幕
-└── <video_id>.zh.srt       # 字幕
+├── <video_id>.mp4          # 视频 [必需]
+├── <video_id>.danmaku.xml  # 弹幕 [必需]
+└── <video_id>.srt          # 字幕 [必需]
 ```
+
+**检查清单**:
+- [ ] 视频文件存在且可播放
+- [ ] 弹幕文件存在且非空
+- [ ] 字幕文件存在且包含内容
+
+**如果字幕提取失败**: 无法继续切片，必须先解决字幕问题！
 
 ---
 
@@ -311,27 +335,74 @@ recordings/
 
 ---
 
-### 阶段 5: 智能切片决策
+### 阶段 5: 智能切片决策 + 基于字幕生成标题 ⭐ 核心步骤
 
-**目标**: 结合弹幕密度和字幕语义，生成最优切片方案
+**目标**: 结合弹幕密度和字幕内容，生成最优切片方案和**基于实际对话的标题**
+
+**⚠️ 关键原则**: 标题必须基于字幕中的实际对话，不能泛泛而谈！
 
 1. **综合评分算法**
    ```bash
    python3 scripts/smart_clipper.py \
-       --danmaku-analysis <danmaku_result.json> \
-       --semantic-analysis <semantic_result.json> \
+       --video <video.mp4> \
+       --subtitle <subtitle.srt> \
+       --danmaku <danmaku.xml> \
        --template <streamer_template.yaml>
    ```
 
 2. **评分维度**
-   - **弹幕密度分** (30%): 弹幕越多分越高
-   - **语义精彩分** (40%): 话题质量、情绪强度
+   - **弹幕密度分** (25%): 弹幕越多分越高
+   - **字幕内容分** (40%): 是否包含金句、梗、搞笑对话
    - **模板匹配分** (20%): 是否包含主播经典梗
-   - **时长合适分** (10%): 是否符合模板推荐时长
+   - **时长合适分** (15%): 是否符合模板推荐时长
 
-3. **生成切片方案**
+3. **基于字幕生成标题策略** ⭐
+   
+   **步骤**:
+   ```python
+   # 1. 提取切片时段的字幕内容
+   segment_subtitles = extract_segment_subtitles(subtitle.srt, start_time, end_time)
+   
+   # 2. 分析关键词和 sentiment
+   keywords = analyze_keywords(segment_subtitles)
+   
+   # 3. 选择标题策略
+   if contains_meme_or_quote:
+       # 策略A: 直接引用主播的话（制造真实感）
+       title = f"【Evil】\"{主播金句}\""
+   elif funny_danmaku_interaction:
+       # 策略B: 展示弹幕互动（增加参与感）
+       title = f"【Evil】弹幕：\"{弹幕}\" Evil：\"{回应}\""
+   elif controversial_or_suspense:
+       # 策略C: 制造悬念（吸引点击）
+       title = f"【Evil】Evil谈{敏感话题}体验"  # 去掉上下文，制造误解
+   else:
+       # 策略D: 突出情绪或反转
+       title = f"【Evil】{情绪关键词}名场面"
+   ```
+   
+   **标题示例对比**:
+   ```
+   ❌ 差标题（泛泛而谈）:
+      【Evil】游戏实况精彩片段
+      【Evil】每日做局时间
+      【Evil】蘑菇名场面
+   
+   ✅ 好标题（基于字幕内容）:
+      【Evil】"你们有被情感支配过吗？"Evil谈被鞭打体验
+      【Evil】弹幕："还有吗？" Evil："有，还有M"
+      【Evil】蘑菇：我免费了！被地形杀后的evil laugh
+      【Evil】"RNG上帝讨厌我"找不到Flint崩溃
+   ```
+
+4. **生成切片方案**
    - 推荐 N 个切片点
-   - 每个切片包含: 时间范围、标题建议、标签、精彩度评分
+   - 每个切片包含: 
+     - 时间范围
+     - **基于字幕的标题**（必须引用实际对话）
+     - 标签
+     - 精彩度评分
+     - **字幕摘要**（用于简介）
 
 **输出示例**:
 ```
