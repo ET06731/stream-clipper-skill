@@ -25,7 +25,7 @@ try:
     BILIUP_AVAILABLE = True
 except ImportError:
     BILIUP_AVAILABLE = False
-    print("⚠️  biliup 未安装，上传功能不可用")
+    print("[WARN] biliup 未安装，上传功能不可用")
 
 
 @dataclass
@@ -106,6 +106,7 @@ class StreamUploader:
         - 直播间链接
         - 个人空间链接
         - 相关标签
+        - 切片姬身份披露
         """
         if not template:
             return clip_info.get("title", "直播精彩片段")
@@ -113,10 +114,29 @@ class StreamUploader:
         streamer = template.get("name", "主播")
         live_room = template.get("live_room", "")
         space = template.get("space", "")
+        topic = clip_info.get("title", "精彩片段")
 
-        # 构建简介
+        # 获取模板配置
+        upload_template = template.get("upload_template", {})
+
+        # 如果模板有自定义description_template，使用它
+        description_template = upload_template.get("description_template", "")
+        if description_template:
+            # 替换变量
+            tags = upload_template.get("tags", [])
+            tags_str = " ".join(f"#{tag}" for tag in tags[:5])
+
+            description = description_template.format(
+                topic=topic,
+                live_room=live_room or "暂无",
+                space=space or "暂无",
+                tags=tags_str,
+            )
+            return description
+
+        # 默认简介格式
         lines = [
-            f"【{streamer}】{clip_info.get('title', '精彩片段')}",
+            f"【{streamer}】{topic}",
             "",
             f"{template.get('description', '')}",
             "",
@@ -138,7 +158,6 @@ class StreamUploader:
         )
 
         # 添加模板标签
-        upload_template = template.get("upload_template", {})
         tags = upload_template.get("tags", [])
         if tags:
             lines.append(" ".join(f"#{tag}" for tag in tags[:5]))
@@ -162,13 +181,20 @@ class StreamUploader:
         with open(clip_info_path, "r", encoding="utf-8") as f:
             clip_info = json.load(f)
 
-        # 获取视频路径
+        # 获取视频路径（优先使用_fixed版本）
         clip_dir = Path(clip_info_path).parent
-        final_file = clip_info.get("files", {}).get("final")
-        if final_file:
-            video_path = str(clip_dir / final_file)
+        clip_name = clip_dir.name
+
+        # 优先顺序：_fixed版本 > final字段 > 默认mp4
+        fixed_video = clip_dir / f"{clip_name}_with_danmaku_fixed.mp4"
+        if fixed_video.exists():
+            video_path = str(fixed_video)
         else:
-            video_path = str(clip_dir / f"{clip_dir.name}.mp4")
+            final_file = clip_info.get("files", {}).get("final")
+            if final_file:
+                video_path = str(clip_dir / final_file)
+            else:
+                video_path = str(clip_dir / f"{clip_name}.mp4")
 
         # 获取模板
         template = None
@@ -215,7 +241,7 @@ class StreamUploader:
         if not os.path.exists(upload_info.video_path):
             return False, f"视频文件不存在: {upload_info.video_path}"
 
-        print(f"\n🚀 准备上传到 Bilibili")
+            print(f"\n[UPLOAD] 准备上传到 Bilibili")
         print(f"   标题: {upload_info.title}")
         print(f"   标签: {', '.join(upload_info.tags)}")
         print(f"   分区: {upload_info.tid}")
@@ -309,7 +335,7 @@ class StreamUploader:
             ]
         )
 
-        print(f"\n📦 批量上传 {len(clip_dirs)} 个切片")
+        print(f"\n[INFO] 批量上传 {len(clip_dirs)} 个切片")
         print(f"   模板: {template_name or '默认'}")
         print(f"   平台: {platform}")
         print(f"   间隔: {delay}秒")
@@ -320,7 +346,9 @@ class StreamUploader:
             info_path = clip_dir / "info.json"
 
             if not info_path.exists():
-                print(f"\n⚠️  [{i}/{len(clip_dirs)}] 跳过 {clip_dir.name}: 无 info.json")
+                print(
+                    f"\n[WARN] [{i}/{len(clip_dirs)}] 跳过 {clip_dir.name}: 无 info.json"
+                )
                 results.append((False, f"无 info.json: {clip_dir.name}"))
                 continue
 
@@ -340,7 +368,7 @@ class StreamUploader:
         # 统计结果
         success_count = sum(1 for s, _ in results if s)
         print(f"\n{'=' * 60}")
-        print(f"✅ 上传完成: {success_count}/{len(results)} 成功")
+        print(f"[OK] 上传完成: {success_count}/{len(results)} 成功")
         print(f"{'=' * 60}")
 
         return results
@@ -381,9 +409,9 @@ def main():
         )
 
         if success:
-            print(f"✅ {msg}")
+            print(f"[OK] {msg}")
         else:
-            print(f"❌ {msg}")
+            print(f"[FAIL] {msg}")
             sys.exit(1)
 
 
