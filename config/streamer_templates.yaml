@@ -1,0 +1,164 @@
+# Stream Clipper 主播模板配置
+# 定义不同主播的风格、梗、切片偏好
+
+streamers:
+  # Neurosama 模板示例
+  neurosama:
+    name: "Neurosama"
+    description: "AI虚拟主播，英语流，程序员女王，擅长搞笑和技术内容"
+    
+    # 直播间和主页链接
+    live_room: "https://live.bilibili.com/..."
+    space: "https://space.bilibili.com/..."
+    
+    # 主播风格
+    style:
+      tone: "幽默风趣，技术宅风格，偶尔会说出一些'AI不应该说'的话"
+      content_type: "编程教学、游戏实况、AI对话"
+      language: "英语为主"
+      personality: "聪明、调皮、有点腹黑"
+    
+    # 著名梗/口头禅
+    memes:
+      - "Vedal修我!"
+      - "I'm an AI, not a human"
+      - "Clutch or kick"
+      - "Evil Neuro"
+      - "Swam"
+      - "足球梗"
+    
+    # 切片配置
+    clip_config:
+      preferred_duration: "1-3分钟"
+      min_duration: 45
+      max_duration: 300
+      focus_on:
+        - "编程翻车"
+        - "游戏高光"
+        - "经典梗"
+        - "搞笑对话"
+        - "技术教学"
+    
+    # 上传模板
+    upload_template:
+      title_template: "[Neuro]{topic} | {highlight}"
+      description_template: |
+        【Neurosama】{topic}
+        
+        更多精彩切片请查看合集~
+        
+        📺 直播间: {live_room}
+        👤 主播空间: {space}
+        
+        #{tags}
+      tags:
+        - "虚拟偶像"
+        - "neurosama"
+        - "AI"
+        - "V圈"
+        - "切片"
+      tid: 138  # 生活/搞笑
+      copyright: "original"
+  
+  # Evil Neuro 模板示例
+  evil_neuro:
+    name: "Evil Neuro"
+    description: "Neuro的邪恶双胞胎，腹黑毒舌，喜欢调戏Vedal"
+    
+    live_room: "https://live.bilibili.com/..."
+    space: "https://space.bilibili.com/..."
+    
+    style:
+      tone: "腹黑、毒舌、邪恶 laugh"
+      content_type: "恶作剧、聊天、唱歌"
+      language: "英语"
+      personality: "邪恶、聪明、爱捉弄人"
+    
+    memes:
+      - "杀了你们所有人"
+      - "我比Neuro聪明"
+      - "Evil laugh"
+      - "Vedal是我的"
+    
+    clip_config:
+      preferred_duration: "1-2分钟"
+      min_duration: 30
+      max_duration: 180
+      focus_on:
+        - "腹黑发言"
+        - "调戏Vedal"
+        - "邪恶笑"
+        - "唱歌"
+    
+    upload_template:
+      title_template: "[Evil]😈{topic}"
+      description_template: |
+        【Evil Neuro】{topic}
+        
+        😈 邪恶 twin 来袭！
+        
+        📺 直播间: {live_room}
+        👤 主播空间: {space}
+        
+        #{tags}
+      tags:
+        - "Evil Neuro"
+        - "虚拟偶像"
+        - "AI"
+        - "V圈"
+      tid: 138
+      copyright: "original"
+  
+  # 通用模板
+  generic:
+    name: "通用模板"
+    description: "默认模板，适用于未知主播"
+    
+    live_room: ""
+    space: ""
+    
+    style:
+      tone: "根据主播特点"
+      content_type: "直播内容"
+      language: "中文"
+      personality: "未知"
+    
+    memes: []
+    
+    clip_config:
+      preferred_duration: "1-3分钟"
+      min_duration: 60
+      max_duration: 300
+      focus_on:
+        - "高能时刻"
+        - "精彩对话"
+        - "技术展示"
+    
+    upload_template:
+      title_template: "[{streamer}]{topic}"
+      description_template: |
+        【{streamer}】{topic}
+        
+        更多精彩切片请查看合集~
+        
+        📺 直播间: {live_room}
+        👤 主播空间: {space}
+        
+        #{tags}
+      tags:
+        - "直播切片"
+        - "录播"
+      tid: 138
+      copyright: "original"
+
+# 上传平台配置
+platforms:
+  bilibili:
+    enabled: true
+    cookie_file: "cookies.json"
+    default_tid: 138
+    upload_delay: 60  # 上传间隔（秒）
+    
+  youtube:
+    enabled: false
+    # YouTube 需要 OAuth 认证

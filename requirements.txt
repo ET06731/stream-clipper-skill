@@ -1,0 +1,15 @@
+# Stream Clipper 依赖
+
+# 核心依赖
+yt-dlp>=2024.1.1
+requests>=2.31.0
+pyyaml>=6.0
+
+# 弹幕处理
+xmltodict>=0.13.0
+
+# 上传（可选，如果需要上传到B站）
+biliup>=1.1.0
+
+# 数据处理（可选）
+numpy>=1.24.0
