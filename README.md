@@ -1,6 +1,46 @@
-# Stream Clipper - 直播切片智能剪辑工具
+# Stream Clipper - 直播录制与切片智能剪辑工具
 
-> 基于弹幕密度和字幕语义分析的直播切片工具，支持主播个性化模板
+> 支持两种模式：1) 实时直播录制（30分钟自动分段 + 弹幕录制）；2) 录播回放切片（弹幕密度 + 语义分析）。基于主播个性化模板的高质量切片工具。
+
+## 🎬 两种工作模式
+
+### 模式一：直播实时录制 ⭐ 推荐
+
+适合录制正在进行的直播，自动分段防止硬盘溢出。
+
+```bash
+# 完整工作流：录制 + 自动切片
+python scripts/record_workflow.py "https://live.bilibili.com/55"
+
+# 仅录制（30分钟分段）
+python scripts/smart_record.py "https://live.bilibili.com/55" -t 30
+
+# 录制完成后切片
+python scripts/auto_clipper.py --list ./recordings/recorded_list_xxx.json
+```
+
+**核心特性**:
+- ✅ **30分钟自动分段** - 防止硬盘溢出，方便管理
+- ✅ **实时弹幕录制** - 同时保存弹幕内容和配置
+- ✅ **优雅停止** - Ctrl+C 立即停止，不丢失数据
+- ✅ **自动精彩片段切片** - 录制完成后自动生成3个推荐片段
+
+### 模式二：录播回放切片
+
+适合下载已结束的直播回放进行分析和切片。
+
+```bash
+# 下载回放
+python scripts/download_stream.py "https://www.bilibili.com/video/BVxxxxx"
+
+# 分析弹幕
+python scripts/analyze_danmaku.py ./downloads/BVxxxxx.danmaku.xml
+
+# 智能切片
+python scripts/clip_and_burn.py --video ./downloads/BVxxxxx.mp4 --recommendations ./recommendations.json
+```
+
+---
 
 ## ✅ 已完成的核心功能
 
@@ -46,10 +86,28 @@
 - ⏳ 批量处理
 
 ### 🚀 7. 上传模块 (`scripts/upload_clip.py`)
-- ⏳ Bilibili 上传（biliup）
-- ⏳ 语义标题生成
-- ⏳ 简介自动生成（含主播链接）
-- ⏳ 批量上传
+- ✅ Bilibili 上传（biliup）
+- ✅ 语义标题生成
+- ✅ 简介自动生成（含主播链接）
+- ✅ 批量上传
+
+### 📺 8. 直播录制 (`scripts/smart_record.py`) ⭐ 新功能
+- ✅ **30分钟自动分段** - 防止硬盘溢出
+- ✅ **实时弹幕录制** - 同时保存弹幕配置
+- ✅ **优雅停止** - Ctrl+C 不丢失数据
+- ✅ **显示录制进度** - 实时百分比
+- ✅ **生成录制列表** - JSON格式
+
+### ✂️ 9. 自动切片 (`scripts/auto_clipper.py`) ⭐ 新功能
+- ✅ **自动分析精彩片段** - 每段生成3个推荐
+- ✅ **自动调用剪辑** - 无需手动操作
+- ✅ **批量处理** - 处理所有录制分段
+- ✅ **分类推荐** - 高能/搞笑/团战
+
+### 🎯 10. 完整工作流 (`scripts/record_workflow.py`) ⭐ 新功能
+- ✅ **一键录制+切片** - 完整自动化流程
+- ✅ **交互式确认** - 录制完成后询问是否切片
+- ✅ **状态保存** - 记录所有操作日志
 
 ## 📁 文件结构
 
@@ -58,16 +116,25 @@ stream-clipper/
 ├── SKILL.md                          ✅ 完整工作流程文档
 ├── README.md                         ✅ 项目说明
 ├── requirements.txt                  ✅ Python依赖
+├── package.json                      ✅ npm配置（可选）
+├── bin/
+│   └── cli.js                        ✅ npm CLI入口
 ├── scripts/                          ✅ 核心脚本
-│   ├── download_stream.py           - 下载视频+弹幕+字幕
-│   ├── analyze_danmaku.py           - 弹幕密度分析
-│   ├── analyze_semantic.py          - 字幕语义分析
-│   ├── smart_clipper.py             - 智能切片决策
-│   ├── streamer_template.py         - 主播模板管理
-│   ├── clip_and_burn.py             - 视频剪辑和烧录
-│   └── upload_clip.py               - 上传到B站
-└── config/                           ✅ 配置文件
-    └── streamer_templates.yaml      - 主播模板配置
+│   ├── download_stream.py           ✅ 下载视频+弹幕+字幕
+│   ├── analyze_danmaku.py           ✅ 弹幕密度分析
+│   ├── analyze_semantic.py          ✅ 字幕语义分析
+│   ├── smart_clipper.py             ✅ 智能切片决策
+│   ├── streamer_template.py         ✅ 主播模板管理
+│   ├── clip_and_burn.py             ✅ 视频剪辑和烧录
+│   ├── upload_clip.py               ✅ 上传到B站
+│   ├── smart_record.py              ✅ 🆕 智能分段录制
+│   ├── auto_clipper.py              ✅ 🆕 自动精彩片段切片
+│   ├── record_workflow.py           ✅ 🆕 完整录制工作流
+│   ├── record_live.py               ✅ 🆕 基础直播录制
+│   └── query_video_stats.py         ✅ 🆕 视频数据查询
+├── config/                           ✅ 配置文件
+│   └── streamer_templates.yaml      ✅ 主播模板配置
+└── .gitignore                        ✅ Git忽略配置
 ```
 
 **配置说明**:
@@ -90,41 +157,67 @@ stream-clipper/
 
 ## 🚀 快速开始
 
-### 安装依赖
+### 安装
 
 ```bash
+# 方式1: Python直接安装
 pip install yt-dlp pyyaml requests biliup xmltodict
+
+# 方式2: npm全局安装
+npm install -g ET06731/stream-clipper-skill
 ```
 
-### 基本使用流程
+### 使用方式
+
+#### 方式A: 直播录制（推荐新手）
+
+```bash
+# 一键录制 + 自动切片
+python scripts/record_workflow.py "https://live.bilibili.com/55"
+
+# 录制过程:
+# 1. 每30分钟自动分段
+# 2. 同时录制弹幕
+# 3. 显示实时进度
+# 4. 录制完成后询问是否切片
+```
+
+#### 方式B: 录播切片
+
+```bash
+# 1. 下载回放
+python scripts/download_stream.py "https://www.bilibili.com/video/BVxxxxx"
+
+# 2. 分析弹幕
+python scripts/analyze_danmaku.py ./downloads/BVxxxxx.danmaku.xml
+
+# 3. 剪辑视频
+python scripts/clip_and_burn.py \
+    --video ./downloads/BVxxxxx.mp4 \
+    --recommendations ./recommendations.json \
+    --danmaku ./downloads/BVxxxxx.danmaku.xml
+
+# 4. 上传到B站
+python scripts/upload_clip.py ./clips --batch --template evil_neuro
+```
+
+#### 方式C: Python API
 
 ```python
-# 1. 下载直播
+# 直播录制
+from scripts.smart_record import LiveRecorder
+recorder = LiveRecorder(output_dir="./recordings", segment_minutes=30)
+recorded_files = recorder.smart_record("https://live.bilibili.com/55")
+
+# 自动切片
+from scripts.auto_clipper import AutoClipper
+clipper = AutoClipper("./clips_output")
+clipper.process_all_segments(video_files=recorded_files)
+
+# 录播下载
 from scripts.download_stream import StreamDownloader
 downloader = StreamDownloader()
 result = downloader.download("https://www.bilibili.com/video/BVxxxxx")
-
-# 2. 分析弹幕
-from scripts.analyze_danmaku import DanmakuAnalyzer
-analyzer = DanmakuAnalyzer()
-danmaku_result = analyzer.analyze(result['danmaku_path'])
-
-# 3. 分析语义
-from scripts.analyze_semantic import SemanticAnalyzer
-semantic_analyzer = SemanticAnalyzer()
-semantic_result = semantic_analyzer.analyze(result['subtitle_path'])
-
-# 4. 智能切片
-from scripts.smart_clipper import SmartClipper
-clipper = SmartClipper()
-recommendations = clipper.generate_recommendations(
-    'danmaku_analysis.json',
-    'semantic_analysis.json'
-)
-
-# 5. 后续步骤（待完成）
-# clip_and_burn()
-# upload()
 ```
 
 ## 🎯 核心特性
