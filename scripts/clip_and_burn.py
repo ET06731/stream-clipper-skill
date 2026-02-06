@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 视频剪辑和烧录模块
 根据智能切片的推荐，剪辑视频并烧录弹幕/字幕
@@ -44,6 +45,7 @@ class ClipAndBurn:
                 "/opt/homebrew/opt/ffmpeg-full/bin/ffmpeg",
                 "/usr/local/bin/ffmpeg",
                 "/usr/bin/ffmpeg",
+                "D:/Project/ffmpeg.exe",
                 "D:/ffmpeg.exe",
                 "C:/ffmpeg/bin/ffmpeg.exe",
             ]
@@ -86,7 +88,7 @@ class ClipAndBurn:
         output_path = Path(output_dir) / f"{clip.output_name}.mp4"
         duration = clip.end - clip.start
 
-        print(f"\n✂️  剪辑: {clip.title}")
+        print(f"\n[CLIP] 剪辑: {clip.title}")
         print(
             f"   时间: {self._seconds_to_time(clip.start)} - {self._seconds_to_time(clip.end)}"
         )
@@ -108,10 +110,10 @@ class ClipAndBurn:
 
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            print(f"   ✅ 完成: {output_path.name}")
+            print(f"   [OK] 完成: {output_path.name}")
             return str(output_path)
         except subprocess.CalledProcessError as e:
-            print(f"   ❌ 失败: {e.stderr}")
+            print(f"   [FAIL] 失败: {e.stderr}")
             raise
 
     def extract_danmaku_segment(
@@ -159,11 +161,13 @@ class ClipAndBurn:
     def _xml_to_ass(self, xml_path: str, ass_path: str):
         """
         将弹幕 XML 转换为 ASS 格式
-        简化版本，实际使用需要更完整的样式配置
+        滚动弹幕：从右往左，显示在画面上方
         """
         import xml.etree.ElementTree as ET
+        import random
 
         # ASS 头部
+        # Alignment=8 表示顶部居中
         ass_header = """[Script Info]
 Title: Danmaku
 ScriptType: v4.00+
@@ -172,7 +176,7 @@ PlayResY: 1080
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Microsoft YaHei,48,&H00FFFFFF,&H00FFFFFF,&H00000000,&H7F404040,0,0,0,0,100,100,0,0,1,2,0,2,20,20,30,1
+Style: Default,Microsoft YaHei,40,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,1.5,0,8,20,20,50,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -182,24 +186,83 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         root = tree.getroot()
 
         events = []
+        screen_width = 1920
+        screen_height = 1080
+
+        # 弹幕轨道管理（防止重叠）
+        tracks = [0] * 15  # 15条轨道，每条轨道记录结束时间
+
         for d in root.findall("d"):
             p = d.get("p", "").split(",")
             if len(p) >= 8 and d.text:
                 time_sec = float(p[0])
-                # 简单的滚动弹幕
+                danmaku_type = int(p[1])  # 弹幕模式：1=滚动，4=底部，5=顶部，6=反向
+
                 start_time = self._seconds_to_ass_time(time_sec)
-                end_time = self._seconds_to_ass_time(time_sec + 8)  # 显示8秒
+                duration = 8.0  # 显示8秒
+                end_time = self._seconds_to_ass_time(time_sec + duration)
 
                 # 转义特殊字符
-                text = d.text.replace(",", "，").replace("\n", " ")
+                text = (
+                    d.text.replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
+                )
+                text = text.replace(",", "，").replace("\n", " ")
 
-                event = f"Dialogue: 0,{start_time},{end_time},Default,,0,0,0,,{text}"
-                events.append(event)
+                # 根据弹幕类型处理
+                if danmaku_type == 1:  # 滚动弹幕（从右往左）
+                    # 找一条可用的轨道
+                    track_idx = self._find_available_track(tracks, time_sec)
+                    if track_idx >= 0:
+                        tracks[track_idx] = time_sec + duration
+
+                        # 计算Y坐标（从上到下分布）
+                        y_pos = 50 + track_idx * 50  # 每条轨道间隔50像素
+
+                        # 计算起始和结束X坐标（从右往左）
+                        # 估算文字宽度（每个字符约30像素）
+                        text_width = len(text) * 30
+                        x_start = screen_width + 50  # 从屏幕右侧外开始
+                        x_end = -text_width - 50  # 移动到屏幕左侧外
+
+                        # 使用 \move 标签实现滚动
+                        # \move(x1,y1,x2,y2,t1,t2) - 从(x1,y1)移动到(x2,y2)
+                        move_tag = f"{{\\move({x_start},{y_pos},{x_end},{y_pos},0,{int(duration * 1000)})}}"
+                        styled_text = f"{move_tag}{text}"
+
+                        event = f"Dialogue: 0,{start_time},{end_time},Default,,0,0,0,,{styled_text}"
+                        events.append(event)
+
+                elif danmaku_type == 5:  # 顶部固定弹幕
+                    y_pos = 50
+                    # 使用 \pos 标签固定在顶部
+                    pos_tag = f"{{\\pos({screen_width // 2},{y_pos})\\an8}}"
+                    styled_text = f"{pos_tag}{text}"
+
+                    event = f"Dialogue: 0,{start_time},{end_time},Default,,0,0,0,,{styled_text}"
+                    events.append(event)
+
+                elif danmaku_type == 4:  # 底部固定弹幕
+                    y_pos = screen_height - 100
+                    pos_tag = f"{{\\pos({screen_width // 2},{y_pos})\\an2}}"
+                    styled_text = f"{pos_tag}{text}"
+
+                    event = f"Dialogue: 0,{start_time},{end_time},Default,,0,0,0,,{styled_text}"
+                    events.append(event)
 
         # 写入文件
         with open(ass_path, "w", encoding="utf-8") as f:
             f.write(ass_header)
             f.write("\n".join(events))
+
+    def _find_available_track(self, tracks: list, current_time: float) -> int:
+        """找到一条可用的弹幕轨道"""
+        for i, end_time in enumerate(tracks):
+            if end_time <= current_time:
+                return i
+        # 如果所有轨道都被占用，随机选择一条
+        import random
+
+        return random.randint(0, len(tracks) - 1)
 
     def _seconds_to_ass_time(self, seconds: float) -> str:
         """转换为 ASS 时间格式"""
@@ -224,7 +287,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             subtitle_path: 字幕文件路径 (ASS/SRT)
             output_path: 输出路径
         """
-        print(f"   🔥 烧录字幕...")
+        print(f"   [BURN] 烧录字幕...")
 
         # 处理路径空格问题
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -254,9 +317,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             try:
                 subprocess.run(cmd, cwd=tmpdir, capture_output=True, check=True)
                 shutil.copy(tmp_output, output_path)
-                print(f"   ✅ 字幕烧录完成")
+                print(f"   [OK] 字幕烧录完成")
             except subprocess.CalledProcessError as e:
-                print(f"   ⚠️  字幕烧录失败，使用原视频: {e}")
+                print(f"   [WARN] 字幕烧录失败，使用原视频: {e}")
                 shutil.copy(video_path, output_path)
 
     def _convert_to_utf8(self, file_path: str):
@@ -332,7 +395,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 self.burn_subtitles(clipped_video, danmaku_ass, burned_video)
                 final_video = burned_video
             except Exception as e:
-                print(f"   ⚠️  弹幕处理失败: {e}")
+                print(f"   [WARN] 弹幕处理失败: {e}")
 
         # 3. 处理字幕
         if burn_subtitle and subtitle_path and Path(subtitle_path).exists():
@@ -382,7 +445,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             List[Dict]: 每个切片的处理结果
         """
         print("=" * 60)
-        print("🎬 开始处理切片")
+        print("[START] 开始处理切片")
         print("=" * 60)
 
         # 加载切片推荐
@@ -404,11 +467,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 )
                 results.append(result)
             except Exception as e:
-                print(f"   ❌ 处理失败: {e}")
+                print(f"   [FAIL] 处理失败: {e}")
 
         print("\n" + "=" * 60)
-        print(f"✅ 完成 {len(results)}/{len(clips)} 个切片")
-        print(f"📁 输出目录: {output_dir}")
+        print(f"[OK] 完成 {len(results)}/{len(clips)} 个切片")
+        print(f"[DIR] 输出目录: {output_dir}")
         print("=" * 60)
 
         return results
