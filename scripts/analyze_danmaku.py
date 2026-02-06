@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 分析弹幕密度，识别高互动时间点
 """
@@ -157,7 +158,7 @@ class DanmakuAnalyzer:
                 ]
             }
         """
-        print(f"📊 分析弹幕文件: {Path(danmaku_path).name}")
+        print(f"[INFO] 分析弹幕文件: {Path(danmaku_path).name}")
 
         # 解析弹幕
         danmaku_list = self.parse_danmaku_xml(danmaku_path)
@@ -204,7 +205,7 @@ class DanmakuAnalyzer:
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
 
-        print(f"\n🔥 高密度时段:")
+        print(f"\n[PEAK] 高密度时段:")
         for i, moment in enumerate(peak_moments[:5], 1):
             start_min = moment["start"] // 60
             start_sec = moment["start"] % 60
@@ -228,7 +229,7 @@ def main():
     analyzer = DanmakuAnalyzer(window_size=args.window)
     result = analyzer.analyze(args.danmaku_file)
 
-    print(f"\n✅ 分析完成! 结果已保存")
+    print(f"\n[OK] 分析完成! 结果已保存")
 
 
 if __name__ == "__main__":

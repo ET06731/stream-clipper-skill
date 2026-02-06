@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 下载直播回放、弹幕和字幕
 支持 Bilibili 和 YouTube 平台
@@ -15,7 +16,7 @@ from urllib.parse import urlparse
 try:
     import yt_dlp
 except ImportError:
-    print("❌ 错误: yt-dlp 未安装")
+    print("[ERROR] 错误: yt-dlp 未安装")
     print("请运行: pip install yt-dlp")
     sys.exit(1)
 
@@ -77,11 +78,11 @@ class StreamDownloader:
                         danmaku_file = Path(output_path).with_suffix(".danmaku.xml")
                         with open(danmaku_file, "wb") as f:
                             f.write(danmaku_resp.content)
-                        print(f"✅ 弹幕下载完成: {danmaku_file}")
+                        print(f"[OK] 弹幕下载完成: {danmaku_file}")
                         return str(danmaku_file)
 
         except Exception as e:
-            print(f"⚠️ 弹幕下载失败: {e}")
+            print(f"[WARN] 弹幕下载失败: {e}")
 
         return None
 
@@ -102,7 +103,7 @@ class StreamDownloader:
             }
         """
         platform = self.detect_platform(url)
-        print(f"🔍 检测到平台: {platform}")
+        print(f"[INFO] 检测到平台: {platform}")
 
         # 配置 yt-dlp
         ydl_opts = {
@@ -115,11 +116,12 @@ class StreamDownloader:
             "writethumbnail": False,
             "quiet": False,
             "no_warnings": False,
+            "ffmpeg_location": "D:\\Project\\ffmpeg.exe",
         }
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                print(f"\n📊 获取视频信息...")
+                print(f"\n[INFO] 获取视频信息...")
                 info = ydl.extract_info(url, download=False)
 
                 title = info.get("title", "Unknown")
@@ -131,7 +133,7 @@ class StreamDownloader:
                 print(f"   ID: {video_id}")
 
                 # 下载视频
-                print(f"\n⬇️  开始下载视频...")
+                print(f"\n[INFO] 开始下载视频...")
                 ydl.download([url])
 
                 video_path = self.output_dir / f"{video_id}.mp4"
@@ -143,13 +145,13 @@ class StreamDownloader:
                         sub_file = self.output_dir / f"{video_id}.{lang}.srt"
                         if sub_file.exists():
                             subtitle_path = str(sub_file)
-                            print(f"✅ 字幕文件: {sub_file.name}")
+                            print(f"[OK] 字幕文件: {sub_file.name}")
                             break
 
                 # 下载弹幕 (B站)
                 danmaku_path = None
                 if with_danmaku and platform == "bilibili":
-                    print(f"\n💬 下载弹幕...")
+                    print(f"\n[INFO] 下载弹幕...")
                     danmaku_path = self.download_bilibili_danmaku(
                         video_id, str(video_path)
                     )
@@ -169,7 +171,7 @@ class StreamDownloader:
                 with open(metadata_file, "w", encoding="utf-8") as f:
                     json.dump(result, f, ensure_ascii=False, indent=2)
 
-                print(f"\n✅ 下载完成!")
+                print(f"\n[OK] 下载完成!")
                 print(f"   视频: {video_path.name}")
                 if danmaku_path:
                     print(f"   弹幕: {Path(danmaku_path).name}")
@@ -179,7 +181,7 @@ class StreamDownloader:
                 return result
 
         except Exception as e:
-            print(f"❌ 下载失败: {e}")
+            print(f"[ERROR] 下载失败: {e}")
             raise
 
 
