@@ -1,0 +1,33 @@
+{
+  "name": "stream-clipper-cli",
+  "version": "1.0.0",
+  "description": "CLI wrapper for stream-clipper Python tool",
+  "main": "index.js",
+  "bin": {
+    "stream-clipper": "./bin/cli.js",
+    "clipper": "./bin/cli.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/setup.js",
+    "download": "node bin/cli.js download",
+    "analyze": "node bin/cli.js analyze",
+    "clip": "node bin/cli.js clip",
+    "upload": "node bin/cli.js upload"
+  },
+  "keywords": [
+    "bilibili",
+    "stream",
+    "clipper",
+    "video",
+    "danmaku"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "commander": "^9.0.0",
+    "chalk": "^4.1.2"
+  }
+}

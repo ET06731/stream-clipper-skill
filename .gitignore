@@ -41,6 +41,7 @@ Thumbs.db
 *.json
 !config/*.json
 !**/info.json
+!package.json
 clips/
 downloads/
 *.mp4
