@@ -1,7 +1,7 @@
 {
   "name": "stream-clipper-cli",
   "version": "1.0.0",
-  "description": "CLI wrapper for stream-clipper Python tool",
+  "description": "Bilibili直播切片智能剪辑工具 - 支持字幕提取、弹幕分析、智能切片",
   "main": "index.js",
   "bin": {
     "stream-clipper": "./bin/cli.js",
@@ -12,17 +12,32 @@
     "download": "node bin/cli.js download",
     "analyze": "node bin/cli.js analyze",
     "clip": "node bin/cli.js clip",
-    "upload": "node bin/cli.js upload"
+    "upload": "node bin/cli.js upload",
+    "record": "python scripts/record_workflow.py",
+    "extract-subtitles": "python scripts/extract_subtitles.py",
+    "generate-title": "python scripts/generate_title_from_subtitle.py"
   },
   "keywords": [
     "bilibili",
     "stream",
     "clipper",
     "video",
-    "danmaku"
+    "danmaku",
+    "subtitle",
+    "whisper",
+    "vtuber",
+    "直播切片"
   ],
-  "author": "Your Name",
+  "author": "ET06731",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ET06731/stream-clipper-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ET06731/stream-clipper-skill/issues"
+  },
+  "homepage": "https://github.com/ET06731/stream-clipper-skill#readme",
   "engines": {
     "node": ">=14.0.0"
   },
