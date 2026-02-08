@@ -8,8 +8,8 @@ streamers:
     description: "AI虚拟主播，英语流，程序员女王，擅长搞笑和技术内容"
     
     # 直播间和主页链接
-    live_room: "https://live.bilibili.com/..."
-    space: "https://space.bilibili.com/..."
+    live_room: "https://live.bilibili.com/1852504554"
+    space: "https://space.bilibili.com/3546729368520811"
     
     # 主播风格
     style:
@@ -41,28 +41,14 @@ streamers:
     
     # 上传模板
     upload_template:
-      title_template: "[Neuro]{topic} | {highlight}"
-      description_template: |
+      title_template: "[Neuro]{topic} | {summary from subtitle}"
+      description_template: {
         【Neurosama】{topic}
-        
-        更多精彩切片请查看合集~
-        
-        📺 直播间: {live_room}
-        👤 主播空间: {space}
-        
-        ---
-        🤖 关于本切片姬
-        大家好，我是一只愚蠢的切片姬AI，正在努力学习如何剪辑精彩视频。
-        
-        📋 我的翻车记录：
-        • 曾经把弹幕当成字幕居中显示（已修复）
-        • 分不清Evil和Neuro（还在学习中）
-        • 经常把7小时直播全部下载（磁盘：你不要过来啊）
-        • 标题起得像老干部开会（已改进）
-        
-        💝 如果你觉得这个切片不错，那是主播的魅力；
-        💔 如果你觉得有问题，那是我学艺不精。
-        请大家多多包涵这个还在进化的AI切片姬~
+
+        切片来自：{录播时间}
+        📺 直播间: {"https://live.bilibili.com/1852504554"}
+        👤 主播空间: {https://space.bilibili.com/3546729368520811}
+        }
         
         #{tags}
       tags:
@@ -106,7 +92,7 @@ streamers:
     
     upload_template:
       title_template: "[Evil]😈{topic}"
-      description_template: |
+      description_template: {
         【Evil Neuro】{topic}
         
         😈 邪恶 twin 来袭！
@@ -115,19 +101,11 @@ streamers:
         👤 主播空间: {space}
         
         ---
-        🤖 关于本切片姬
-        大家好，我是一只愚蠢的切片姬AI，正在努力学习如何剪辑精彩视频。
-        
-        📋 我的翻车记录：
-        • 曾经把弹幕当成字幕居中显示（已修复）
-        • 分不清Evil和Neuro（还在学习中）
-        • 经常把7小时直播全部下载（磁盘：你不要过来啊）
-        • 标题起得像老干部开会（已改进）
-        
-        💝 如果你觉得这个切片不错，那是Evil的魅力；
-        💔 如果你觉得有问题，那是我学艺不精。
-        请大家多多包涵这个还在进化的AI切片姬~
-        毕竟，连Evil都知道：犯错是学习的一部分！😈
+        👍 如果你喜欢这个切片，请一键三连支持！
+        💬 欢迎在评论区留言，分享你最喜欢的Evil时刻！
+        🔔 关注我，获取更多牛肉的l精彩内容！
+        }
+
         
         #{tags}
       tags:
@@ -167,24 +145,12 @@ streamers:
       title_template: "[{streamer}]{topic}"
       description_template: |
         【{streamer}】{topic}
-        
-        更多精彩切片请查看合集~
+       
         
         📺 直播间: {live_room}
         👤 主播空间: {space}
         
-        ---
-        🤖 关于本切片姬
-        大家好，我是一只愚蠢的切片姬AI，正在努力学习如何剪辑精彩视频。
-        
-        📋 我的翻车记录：
-        • 曾经把弹幕当成字幕居中显示（已修复）
-        • 经常把7小时直播全部下载（磁盘：你不要过来啊）
-        • 标题起得像老干部开会（已改进）
-        
-        💝 如果你觉得这个切片不错，那是主播的魅力；
-        💔 如果你觉得有问题，那是我学艺不精。
-        请大家多多包涵这个还在进化的AI切片姬~
+
         
         #{tags}
       tags:

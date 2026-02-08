@@ -199,8 +199,8 @@ recordings/
 检测到新的主播: Neurosama
 是否创建主播模板? (y/n): y
 
-主播风格背景介绍: AI虚拟主播，英语流，擅长编程和游戏，有很多梗
-著名梗/口头禅: Vedal修我!, 我是AI不是人类, 足球梗, swam
+主播风格背景介绍: AI虚拟主播，英语流，擅长音游，有很多梗
+著名梗/口头禅: 请告诉Vedal我出问题了!, 我是AI不是人类, 足球梗, swam
 推荐切片时长: 1-3分钟
 直播间链接: https://live.bilibili.com/...
 个人空间链接: https://space.bilibili.com/...
@@ -299,20 +299,15 @@ recordings/
 
 **目标**: 分析字幕内容，理解话题结构和精彩点
 
-1. **解析字幕文件**
-   ```bash
-   python3 scripts/analyze_semantic.py <subtitle.srt>
-   ```
+**实现方式**:
+- **AI 方式** (推荐): 使用 AI 语义理解，生成更准确的标题
 
-2. **语义分段**
-   - 按话题自动分段
-   - 识别话题转换点
-   - 提取每段核心内容
+#### AI 字幕分析
+```bash
+python3 scripts/analyze_subtitles_ai.py <subtitle.srt> --streamer 主播名
+```
 
-3. **精彩片段识别**
-   - 分析情绪变化
-   - 识别梗/名言
-   - 标记高能时刻
+
 
 **输出示例**:
 ```
@@ -335,20 +330,64 @@ recordings/
 
 ---
 
-### 阶段 5: 智能切片决策 + 基于字幕生成标题 ⭐ 核心步骤
+### 阶段 5: 智能切片决策 + AI 生成标题 ⭐ 核心步骤
 
-**目标**: 结合弹幕密度和字幕内容，生成最优切片方案和**基于实际对话的标题**
+**目标**: 结合弹幕密度和 AI 字幕分析，生成最优切片方案
 
 **⚠️ 关键原则**: 标题必须基于字幕中的实际对话，不能泛泛而谈！
 
-1. **综合评分算法**
-   ```bash
-   python3 scripts/smart_clipper.py \
-       --video <video.mp4> \
-       --subtitle <subtitle.srt> \
-       --danmaku <danmaku.xml> \
-       --template <streamer_template.yaml>
-   ```
+#### AI 智能切片（推荐）
+```bash
+python3 scripts/smart_clipper_ai.py --subtitle <subtitle.srt> --streamer 主播名
+```
+
+**工作流程**:
+1. AI 分析字幕，识别精彩片段
+2. AI 生成多个标题选项（悬念型/引用型/话题型/搞笑型）
+3. 输出完整切片方案 JSON
+
+**输出示例**:
+```
+🤖 AI 智能切片流程
+
+📊 生成 5 个切片方案:
+
+[1] 00:15:00 - 00:18:30
+    ⭐ 推荐标题: 【Neuro】"Vedal修我！" AI编程翻车现场
+    🏷️  标签: neuro, 编程, 翻车, AI
+    📝 精彩原因: 编程时遭遇bug，呼唤Vedal修理
+
+[2] 00:39:05 - 00:41:20
+    ⭐ 推荐标题: 【Neuro】这不可能！游戏神操作震惊观众
+    🏷️  标签: 游戏, 神操作
+    📝 精彩原因: 游戏中的精彩操作
+```
+
+#### 标题类型说明
+
+| 类型 | 特点 | 示例 |
+|------|------|------|
+| 悬念型 | 制造好奇，吸引点击 | 【Neuro】关于AI，人类不知道的秘密 |
+| 引用型 | 直接引用金句/对话 | 【Neuro】"Vedal修我！" |
+| 话题型 | 突出核心话题 | 【Neuro】编程教学片段 |
+| 搞笑型 | 强调翻车/整活 | 【Neuro】编程翻车合集 |
+| 锐评型 | 突出毒舌观点 | 【Neuro】太敢说了 |
+| 互动型 | 突出弹幕互动 | 【Neuro】弹幕：666 回应：... |
+
+#### 标题示例对比
+
+```
+❌ 差标题（泛泛而谈）:
+   【Evil】游戏实况精彩片段
+   【Evil】每日做局时间
+   【Evil】蘑菇名场面
+
+✅ 好标题（基于字幕内容）:
+   【Evil】"你们有被情感支配过吗？"Evil谈被鞭打体验
+   【Evil】弹幕："还有吗？" Evil："有，还有M"
+   【Evil】蘑菇：我免费了！被地形杀后的evil laugh
+   【Evil】"RNG上帝讨厌我"找不到Flint崩溃
+```
 
 2. **评分维度**
    - **弹幕密度分** (25%): 弹幕越多分越高
@@ -389,17 +428,17 @@ recordings/
       【Evil】蘑菇名场面
    
    ✅ 好标题（基于字幕内容）:
-      【Evil】"你们有被情感支配过吗？"Evil谈被鞭打体验
-      【Evil】弹幕："还有吗？" Evil："有，还有M"
+      【Evil】Evil谈被鞭打体验
+      【Neuro】雌小牛私信调戏老爹大败而归
       【Evil】蘑菇：我免费了！被地形杀后的evil laugh
-      【Evil】"RNG上帝讨厌我"找不到Flint崩溃
+      【neuro】vedal死后，neuro想要使用他的身体…
    ```
 
 4. **生成切片方案**
    - 推荐 N 个切片点
    - 每个切片包含: 
      - 时间范围
-     - **基于字幕的标题**（必须引用实际对话）
+     - **基于字幕/弹幕的标题**（可以引用实际对话）
      - 标签
      - 精彩度评分
      - **字幕摘要**（用于简介）
@@ -525,7 +564,7 @@ BV: BV1xx411c7mD
 streamers:
   neurosama:
     name: "Neurosama"
-    description: "AI虚拟主播，英语流，程序员女王，擅长搞笑和技术内容"
+    description: "AI虚拟主播，英语流，由程序员Vedal创造的ai，擅长搞笑和"
     
     # 直播间和主页
     live_room: "https://live.bilibili.com/..."
@@ -573,6 +612,7 @@ streamers:
 
 是否创建主播模板? (y/n): y
 
+web搜索并自动填充相关信息：
 主播名称: Evil Neuro
 描述: Neuro的邪恶双胞胎，腹黑毒舌，喜欢调戏Vedal
 
@@ -613,23 +653,38 @@ stream-clipper upload --platform bilibili --template <streamer>
 ### 分步命令
 
 ```bash
-# 仅下载
-python3 scripts/download_stream.py <URL>
+# === 字幕分析 ===
 
-# 仅分析弹幕
+# AI 字幕分析（推荐）
+python3 scripts/analyze_subtitles_ai.py <subtitle.srt> --streamer 主播名
+
+# AI 标题生成
+python3 scripts/generate_title_ai.py <highlight.json> --streamer 主播名
+
+# === 完整流程 ===
+
+# AI 智能切片（推荐）
+python3 scripts/smart_clipper_ai.py --subtitle <subtitle.srt> --streamer 主播名
+
+# 继续流程（AI 分析后）
+python3 scripts/smart_clipper_ai.py --subtitle <subtitle.srt> --ai-result <ai_output.json>
+
+# === 其他命令 ===
+
+# 分析弹幕
 python3 scripts/analyze_danmaku.py <danmaku.xml>
 
-# 仅分析字幕
-python3 scripts/analyze_semantic.py <subtitle.srt>
+# 下载视频
+python3 scripts/download_stream.py <URL>
 
-# 仅生成切片方案
-python3 scripts/smart_clipper.py --danmaku-result <...> --semantic-result <...>
+# 提取字幕
+python3 scripts/extract_subtitles.py <video.mp4> --output <video.srt>
 
-# 仅剪辑
-python3 scripts/clip_and_burn.py --video <...> --clips <...>
+# 执行剪辑
+python3 scripts/clip_and_burn.py --video <video.mp4> --clips <clips.json>
 
-# 仅上传
-python3 scripts/upload_clip.py --video <...> --template <...>
+# 上传视频
+python3 scripts/upload_clip.py --video <video.mp4> --template <streamer>
 ```
 
 ---
@@ -683,11 +738,11 @@ numpy>=1.24.0
 
 ## 技术亮点
 
-1. **双维度分析**: 弹幕密度 + 语义分析 = 更准确的精彩点识别
-2. **主播风格模板**: 定制化切片策略，不同主播不同风格
-3. **智能标题生成**: 基于内容语义自动生成标题
-4. **一键完整流程**: 从下载到上传的全自动化
-5. **交互式模板创建**: 引导用户快速创建新主播模板
+1. **AI-powered 字幕分析**: 使用 LLM 语义理解，深度识别话题结构、情绪变化、金句梗
+2. **多风格标题生成**: AI 生成 6 种类型标题（悬念/引用/话题/搞笑/锐评/互动）
+3. **主播风格模板**: 定制化切片策略，不同主播不同风格
+4. **双流程支持**: AI 流程（推荐）+ 快速流程
+5. **一键完整流程**: 从分析到生成的全自动化
 
 ---
 
